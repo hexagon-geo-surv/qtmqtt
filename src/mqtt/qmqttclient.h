@@ -22,6 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QWebSocket;
 class QMqttClientPrivate;
 
 class Q_MQTT_EXPORT QMqttClient : public QObject
@@ -30,7 +31,9 @@ public:
     enum TransportType {
         IODevice = 0,
         AbstractSocket,
-        SecureSocket
+        SecureSocket,
+        WebSocket,
+        SecureWebSocket
     };
 
     enum ClientState {
@@ -110,6 +113,9 @@ public:
     QString clientId() const;
     quint16 keepAlive() const;
     ProtocolVersion protocolVersion() const;
+
+    Q_INVOKABLE void connectToHostWebSocket(QWebSocket *webSocket = nullptr);
+    Q_INVOKABLE void connectToHostWebSocketEncrypted(QWebSocket *webSocket = nullptr);
 
     Q_INVOKABLE void connectToHost();
 #ifndef QT_NO_SSL

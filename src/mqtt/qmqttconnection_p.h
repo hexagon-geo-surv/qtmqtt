@@ -47,7 +47,9 @@ public:
     explicit QMqttConnection(QObject *parent = nullptr);
     ~QMqttConnection() override;
 
+    void disconnectAndResetTransport();
     void setTransport(QIODevice *device, QMqttClient::TransportType transport);
+    void connectTransport(QMqttClient::TransportType transport, const std::shared_ptr<QIODevice> &device);
     QIODevice *transport() const;
 
     bool ensureTransport(bool createSecureIfNeeded = false);
@@ -86,7 +88,8 @@ protected:
 public:
     std::shared_ptr<QIODevice> m_transport;
     QMqttClient::TransportType m_transportType{QMqttClient::IODevice};
-    bool m_customTransport{false}; // connectTo* does not reset m_transport;
+    bool m_transportIsSet{false}; // connectTo* does not reset m_transport;
+    bool m_connectedTransport{false}; // We have connected the signals for m_transport if true
     QMqttClientPrivate *m_clientPrivate{nullptr};
 #ifndef QT_NO_SSL
     QSslConfiguration m_sslConfiguration;
