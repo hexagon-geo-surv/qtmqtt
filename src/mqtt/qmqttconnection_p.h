@@ -26,6 +26,8 @@
 #include <QtCore/QSharedPointer>
 #include <QtCore/QtEndian>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 class QMqttClientPrivate;
@@ -82,9 +84,9 @@ protected:
     void timerEvent(QTimerEvent *event) override;
 
 public:
-    QIODevice *m_transport{nullptr};
+    std::shared_ptr<QIODevice> m_transport;
     QMqttClient::TransportType m_transportType{QMqttClient::IODevice};
-    bool m_ownTransport{false};
+    bool m_customTransport{false}; // connectTo* does not reset m_transport;
     QMqttClientPrivate *m_clientPrivate{nullptr};
 #ifndef QT_NO_SSL
     QSslConfiguration m_sslConfiguration;

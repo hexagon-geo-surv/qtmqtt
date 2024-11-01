@@ -342,7 +342,7 @@ QMqttClient::~QMqttClient()
     \l Disconnected state.
 
     \note Setting a custom transport for a client does not pass over responsibility
-    on connection management. The transport has to be opened for QIODevice based
+    on connection management or ownership. The transport has to be opened for QIODevice based
     transports or connected for socket type transports before calling QMqttClient::connectToHost().
  */
 void QMqttClient::setTransport(QIODevice *device, QMqttClient::TransportType transport)

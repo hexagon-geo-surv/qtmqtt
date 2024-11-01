@@ -64,9 +64,7 @@ QMqttConnection::~QMqttConnection()
 {
     if (m_internalState == BrokerConnected)
         sendControlDisconnect();
-
-    if (m_ownTransport && m_transport)
-        delete m_transport;
+    m_transport = nullptr;
 }
 
 void QMqttConnection::timerEvent(QTimerEvent *event)
@@ -83,37 +81,34 @@ void QMqttConnection::setTransport(QIODevice *device, QMqttClient::TransportType
 {
     qCDebug(lcMqttConnection) << Q_FUNC_INFO << device << " Type:" << transport;
 
-    if (m_transport) {
-        disconnect(m_transport, &QIODevice::aboutToClose, this, &QMqttConnection::transportConnectionClosed);
-        disconnect(m_transport, &QIODevice::readyRead, this, &QMqttConnection::transportReadyRead);
-        if (m_ownTransport)
-            delete m_transport;
+    if (m_transport.get()) {
+        disconnect(m_transport.get(), &QIODevice::aboutToClose, this, &QMqttConnection::transportConnectionClosed);
+        disconnect(m_transport.get(), &QIODevice::readyRead, this, &QMqttConnection::transportReadyRead);
     }
 
-    m_transport = device;
+    // We do not take ownership of the transport here, lifetime
+    // management is done by calling code.
+    m_transport = std::shared_ptr<QIODevice>(device, [](QIODevice *) { ; });
     m_transportType = transport;
-    m_ownTransport = false;
+    m_customTransport = true;
 
-    connect(m_transport, &QIODevice::aboutToClose, this, &QMqttConnection::transportConnectionClosed);
-    connect(m_transport, &QIODevice::readyRead, this, &QMqttConnection::transportReadyRead);
+    connect(m_transport.get(), &QIODevice::aboutToClose, this, &QMqttConnection::transportConnectionClosed);
+    connect(m_transport.get(), &QIODevice::readyRead, this, &QMqttConnection::transportReadyRead);
 }
 
 QIODevice *QMqttConnection::transport() const
 {
-    return m_transport;
+    return m_transport.get();
 }
 
 bool QMqttConnection::ensureTransport(bool createSecureIfNeeded)
 {
     Q_UNUSED(createSecureIfNeeded); // QT_NO_SSL
-    qCDebug(lcMqttConnection) << Q_FUNC_INFO << m_transport;
+    qCDebug(lcMqttConnection) << Q_FUNC_INFO << m_transport.get();
 
-    if (m_transport) {
-        if (m_ownTransport)
-            delete m_transport;
-        else
-            return true;
-    }
+    if (m_customTransport)
+        return true; // transport set by setTransport
+    m_transport = nullptr;
 
     // We are asked to create a transport layer
     if (m_clientPrivate->m_hostname.isEmpty() || m_clientPrivate->m_port == 0) {
@@ -125,8 +120,7 @@ bool QMqttConnection::ensureTransport(bool createSecureIfNeeded)
             createSecureIfNeeded ? new QSslSocket() :
 #endif
                                    new QTcpSocket();
-    m_transport = socket;
-    m_ownTransport = true;
+    m_transport = std::shared_ptr<QIODevice>(socket);
     m_transportType =
 #ifndef QT_NO_SSL
         createSecureIfNeeded ? QMqttClient::SecureSocket :
@@ -142,8 +136,8 @@ bool QMqttConnection::ensureTransport(bool createSecureIfNeeded)
     connect(socket, &QAbstractSocket::disconnected, this, &QMqttConnection::transportConnectionClosed);
     connect(socket, &QAbstractSocket::errorOccurred, this, &QMqttConnection::transportError);
 
-    connect(m_transport, &QIODevice::aboutToClose, this, &QMqttConnection::transportConnectionClosed);
-    connect(m_transport, &QIODevice::readyRead, this, &QMqttConnection::transportReadyRead);
+    connect(m_transport.get(), &QIODevice::aboutToClose, this, &QMqttConnection::transportConnectionClosed);
+    connect(m_transport.get(), &QIODevice::readyRead, this, &QMqttConnection::transportReadyRead);
     return true;
 }
 
@@ -164,7 +158,7 @@ bool QMqttConnection::ensureTransportOpen(const QString &sslPeerName)
     }
 
     if (m_transportType == QMqttClient::AbstractSocket) {
-        auto socket = qobject_cast<QTcpSocket *>(m_transport);
+        auto socket = qobject_cast<QTcpSocket *>(m_transport.get());
         Q_ASSERT(socket);
         if (socket->state() == QAbstractSocket::ConnectedState)
             return sendControlConnect();
@@ -174,7 +168,7 @@ bool QMqttConnection::ensureTransportOpen(const QString &sslPeerName)
     }
 #ifndef QT_NO_SSL
     else if (m_transportType == QMqttClient::SecureSocket) {
-        auto socket = qobject_cast<QSslSocket *>(m_transport);
+        auto socket = qobject_cast<QSslSocket *>(m_transport.get());
         Q_ASSERT(socket);
         if (socket->state() == QAbstractSocket::ConnectedState)
             return sendControlConnect();
