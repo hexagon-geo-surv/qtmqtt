@@ -45,3 +45,6 @@ manifestmeta.thumbnail.names  += "QtMqtt/WebSockets MQTT Subscription*"
 
 navigation.landingpage = "Qt MQTT"
 navigation.cppclassespage = "Qt MQTT C++ Classes"
+
+# Allow zero warnings when testing documentation in CI
+warninglimit = 0
