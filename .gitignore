@@ -68,6 +68,7 @@ Makefile*
 
 # QtCtreator CMake
 CMakeLists.txt.user*
+CMakeUserPresets.json
 
 ## Visual Studio
 # User-specific files
