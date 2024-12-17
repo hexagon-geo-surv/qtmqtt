@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include "qmqttglobal_p.h"
 #include "qmqttclient.h"
 #include "qmqttconnection_p.h"
 

@@ -5,12 +5,9 @@
 #define QTQMQTTGLOBAL_H
 
 #include <QtCore/qglobal.h>
-#include <QtCore/qloggingcategory.h>
 #include <QtMqtt/qtmqttexports.h>
 
 QT_BEGIN_NAMESPACE
-
-Q_DECLARE_LOGGING_CATEGORY(lcMqttClient)
 
 namespace QMqtt
 {

@@ -14,7 +14,7 @@
 //
 // We mean it.
 //
-#include "qmqttglobal.h"
+#include "qmqttglobal_p.h"
 
 #include <QtCore/QByteArray>
 #include <QtCore/QtGlobal>
