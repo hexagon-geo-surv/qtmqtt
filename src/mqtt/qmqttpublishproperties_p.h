@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include "qmqttglobal.h"
+#include "qmqttglobal_p.h"
 #include "qmqttpublishproperties.h"
 
 #include <QtCore/QSharedData>
