@@ -31,7 +31,7 @@ private Q_SLOTS:
 private:
     QProcess m_brokerProcess;
     QString m_testBroker;
-    quint16 m_port{1883};
+    quint16 m_port{0};
 };
 
 tst_QMqttConnectionProperties::tst_QMqttConnectionProperties()
@@ -239,7 +239,7 @@ void tst_QMqttConnectionProperties::maximumTopicAlias()
         client.publish(topic, msgContent, 1);
         QTRY_VERIFY(publishSpy.size() == 1);
 
-        QVERIFY(transportSpy.size() == 1);
+        QTRY_VERIFY(transportSpy.size() == 1);
         const int dataSize = transportSpy.at(0).at(0).toInt();
         if (publishTransportSize == 0) {
             publishTransportSize = dataSize;

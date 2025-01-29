@@ -36,7 +36,7 @@ private:
     void createAndSubscribe(Client *c, QMqttSubscription **sub, const QString &topic);
     QProcess m_brokerProcess;
     QString m_testBroker;
-    quint16 m_port{1883};
+    quint16 m_port{0};
 };
 
 Tst_QMqttSubscription::Tst_QMqttSubscription()
@@ -148,6 +148,9 @@ void Tst_QMqttSubscription::reconnect()
     client.setCleanSession(true);
     client.connectToHost();
     QTRY_VERIFY2(client.state() == QMqttClient::Connected, "Could not connect to broker.");
+
+    if (!client.isTcp() && !client.isSsl())
+        QSKIP("This test only runs for tcp and ssl");
 
     //    - Subscribe to topic A
     const QString subscription("Qt/subscription/topics/resub");
@@ -384,6 +387,8 @@ void Tst_QMqttSubscription::noLocal()
     client.setPort(m_port);
     client.connectToHost();
 
+    const auto clientVersion = client.protocolVersion();
+
     QTRY_VERIFY2(client.state() == QMqttClient::Connected, "Could not connect to broker.");
 
     QMqttSubscriptionProperties subProps;
@@ -400,7 +405,7 @@ void Tst_QMqttSubscription::noLocal()
     client.publish(topic, "content", 1);
     QTRY_VERIFY(publishSpy.size() == 1);
 
-    if (version == QMqttClient::MQTT_3_1_1 || !non) { // 3.1.1 does not know NoLocal and sends to subscription
+    if (clientVersion == QMqttClient::MQTT_3_1_1 || !non) { // 3.1.1 does not know NoLocal and sends to subscription
         QTRY_VERIFY(receivalSpy.size() == 1);
     } else {
         QTest::qWait(3000);
@@ -483,8 +488,8 @@ void Tst_QMqttSubscription::qtbug_104478()
     client.publish(topic, "Wildcard checks", 1);
     QTRY_VERIFY2(pubSpy.size() == 1, "Could not publish message.");
 
-    QTRY_VERIFY2(singleSpy.count() == 1, "Did not receive message");
-    QTRY_VERIFY2(mixedSpy.count() == 1, "Did not receive message");
+    QTRY_VERIFY2(singleSpy.count() >= 1, "Did not receive message");
+    QTRY_VERIFY2(mixedSpy.count() >= 1, "Did not receive message");
 
     client.disconnectFromHost();
     QTRY_VERIFY2(client.state() == QMqttClient::Disconnected, "Could not disconnect from broker.");

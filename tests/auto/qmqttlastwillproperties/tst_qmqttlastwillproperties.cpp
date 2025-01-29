@@ -27,7 +27,7 @@ private Q_SLOTS:
 private:
     QProcess m_brokerProcess;
     QString m_testBroker;
-    quint16 m_port{1883};
+    quint16 m_port{0};
 };
 
 tst_QMqttLastWillProperties::tst_QMqttLastWillProperties()
