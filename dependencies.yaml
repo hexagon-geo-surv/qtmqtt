@@ -5,3 +5,7 @@ dependencies:
   ../qtdeclarative:
     ref: b4bc68997169915e8bb17109a4c50bc755b3d32d
     required: true
+  ../qtwebsockets:
+    ref: 72b72aec12281d23e95b2d97253b1ee28e11084f
+    required: false
+
