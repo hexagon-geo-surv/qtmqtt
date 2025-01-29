@@ -70,8 +70,7 @@ void tst_QMqttSubscriptionProperties::getSet()
 
 void tst_QMqttSubscriptionProperties::subscribe()
 {
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
 

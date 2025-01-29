@@ -100,8 +100,7 @@ void tst_QMqttConnectionProperties::getSet()
 
 void tst_QMqttConnectionProperties::receiveServerProperties()
 {
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     QMqttServerConnectionProperties server = client.serverConnectionProperties();
 
     QCOMPARE(server.isValid(), false);
@@ -156,8 +155,7 @@ void tst_QMqttConnectionProperties::receiveServerProperties()
 
 void tst_QMqttConnectionProperties::maximumPacketSize()
 {
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
 
@@ -205,8 +203,7 @@ void tst_QMqttConnectionProperties::maximumPacketSize()
 void tst_QMqttConnectionProperties::maximumTopicAlias()
 {
     const QByteArray msgContent("SomeContent");
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
 
@@ -291,7 +288,8 @@ void tst_QMqttConnectionProperties::maximumTopicAlias()
     QVERIFY(usageSize < overwriteSize);
 }
 
-void createTopicAliasClient(QMqttClient &client, const QString &hostname, quint16 port)
+template<typename Client>
+void createTopicAliasClient(Client &client, const QString &hostname, quint16 port)
 {
     client.setProtocolVersion(QMqttClient::MQTT_5_0);
     client.setHostname(hostname);
@@ -308,13 +306,13 @@ void tst_QMqttConnectionProperties::maximumTopicAliasReceive()
     const QByteArray msgContent("SomeContent");
     const QString topic("Qt/connprop/receive/alias");
 
-    QMqttClient client;
+    VersionClient(QMqttClient::MQTT_5_0, client);
     createTopicAliasClient(client, m_testBroker, m_port);
 
     client.connectToHost();
     QTRY_VERIFY2(client.state() == QMqttClient::Connected, "Could not connect to broker.");
 
-    QMqttClient subscriber;
+    VersionClient(QMqttClient::MQTT_5_0, subscriber);
     createTopicAliasClient(subscriber, m_testBroker, m_port);
 
     subscriber.connectToHost();
@@ -344,8 +342,7 @@ void tst_QMqttConnectionProperties::maximumTopicAliasReceive()
 
 void tst_QMqttConnectionProperties::assignedClientId()
 {
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
     client.setClientId(QLatin1String(""));
@@ -361,8 +358,7 @@ void tst_QMqttConnectionProperties::assignedClientId()
 
 void tst_QMqttConnectionProperties::userProperties()
 {
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
     QMqttConnectionProperties p;

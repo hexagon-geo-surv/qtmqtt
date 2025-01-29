@@ -54,9 +54,8 @@ void Tst_QMqttClient::stressTest_data()
 void Tst_QMqttClient::stressTest()
 {
     QFETCH(int, qos);
-
-    QMqttClient subscriber;
-    QMqttClient publisher;
+    VersionClient(QMqttClient::MQTT_3_1_1, subscriber);
+    VersionClient(QMqttClient::MQTT_3_1_1, publisher);
 
     subscriber.setHostname(m_testBroker);
     subscriber.setPort(m_port);
@@ -110,7 +109,7 @@ void Tst_QMqttClient::stressTest2()
     QSet<qint32> msgIds;
     msgIds.reserve(msgCount);
 
-    QMqttClient publisher;
+    VersionClient(QMqttClient::MQTT_3_1_1, publisher);
     publisher.setHostname(m_testBroker);
     publisher.setPort(m_port);
 

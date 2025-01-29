@@ -32,7 +32,8 @@ private Q_SLOTS:
     void qtbug_106203();
     void qtbug_104478();
 private:
-    void createAndSubscribe(QMqttClient *c, QMqttSubscription **sub, const QString &topic);
+    template<typename Client>
+    void createAndSubscribe(Client *c, QMqttSubscription **sub, const QString &topic);
     QProcess m_brokerProcess;
     QString m_testBroker;
     quint16 m_port{1883};
@@ -211,7 +212,8 @@ void Tst_QMqttSubscription::reconnect()
     QTRY_VERIFY2(client.state() == QMqttClient::Disconnected, "Could not disconnect.");
 }
 
-void Tst_QMqttSubscription::createAndSubscribe(QMqttClient *c, QMqttSubscription **sub, const QString &topic)
+template<typename Client>
+void Tst_QMqttSubscription::createAndSubscribe(Client *c, QMqttSubscription **sub, const QString &topic)
 {
     c->setProtocolVersion(QMqttClient::MQTT_5_0);
     c->setHostname(m_testBroker);
@@ -227,8 +229,7 @@ void Tst_QMqttSubscription::createAndSubscribe(QMqttClient *c, QMqttSubscription
 void Tst_QMqttSubscription::sharedConnection()
 {
     // Create / Connect publisher
-    QMqttClient sender;
-    sender.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, sender);
     sender.setHostname(m_testBroker);
     sender.setPort(m_port);
     sender.connectToHost();
@@ -237,13 +238,16 @@ void Tst_QMqttSubscription::sharedConnection()
     // Create GroupA
     const int groupSizeA = 2;
     const QString groupTopicA{QLatin1String("$share/groupA/shared/sub")};
-    QMqttClient listenersA[groupSizeA];
+
+    VersionClient(QMqttClient::MQTT_5_0, listenersA0);
+    VersionClient(QMqttClient::MQTT_5_0, listenersA1);
+    std::vector listenersA = {&listenersA0, &listenersA1};
     QMqttSubscription *subsA[groupSizeA];
     int messageCounterA[groupSizeA] = {0};
     int messageSumA = 0;
     // listenerAx: $share/groupA/Qt/Subscription/shared_check/#
     for (int i = 0; i < groupSizeA; ++i) {
-        createAndSubscribe(&listenersA[i], &subsA[i], groupTopicA);
+        createAndSubscribe(listenersA[i], &subsA[i], groupTopicA);
         QCOMPARE(subsA[i]->isSharedSubscription(), true);
         QCOMPARE(subsA[i]->sharedSubscriptionName(), QLatin1String("groupA"));
         connect(subsA[i], &QMqttSubscription::messageReceived, [i, &messageCounterA, &messageSumA]() {
@@ -256,13 +260,18 @@ void Tst_QMqttSubscription::sharedConnection()
     // Create GroupB
     const int groupSizeB = 5;
     const QString groupTopicB{QLatin1String("$share/groupB/shared/#")};
-    QMqttClient listenersB[groupSizeB];
+    VersionClient(QMqttClient::MQTT_5_0, listenersB0);
+    VersionClient(QMqttClient::MQTT_5_0, listenersB1);
+    VersionClient(QMqttClient::MQTT_5_0, listenersB2);
+    VersionClient(QMqttClient::MQTT_5_0, listenersB3);
+    VersionClient(QMqttClient::MQTT_5_0, listenersB4);
+    std::vector listenersB ={&listenersB0, &listenersB1, &listenersB2, &listenersB3, &listenersB4};
     QMqttSubscription *subsB[groupSizeB];
     int messageCounterB[groupSizeB] = {0};
     int messageSumB = 0;
     // listenerBx: $share/groupB/Qt/Subscription/shared_check/#
     for (int i = 0; i < groupSizeB; ++i) {
-        createAndSubscribe(&listenersB[i], &subsB[i], groupTopicB);
+        createAndSubscribe(listenersB[i], &subsB[i], groupTopicB);
         QCOMPARE(subsB[i]->isSharedSubscription(), true);
         QCOMPARE(subsB[i]->sharedSubscriptionName(), QLatin1String("groupB"));
         connect(subsB[i], &QMqttSubscription::messageReceived, [i, &messageCounterB, &messageSumB]() {
@@ -322,8 +331,7 @@ void Tst_QMqttSubscription::sharedNonShared()
     QFETCH(bool, expected);
 
     // Create / Connect publisher
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
     client.connectToHost();
@@ -371,11 +379,11 @@ void Tst_QMqttSubscription::noLocal()
     QFETCH(QMqttClient::ProtocolVersion, version);
     QFETCH(bool, non);
 
-    QMqttClient client;
-    client.setProtocolVersion(version);
+    VersionClient(version, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
     client.connectToHost();
+
     QTRY_VERIFY2(client.state() == QMqttClient::Connected, "Could not connect to broker.");
 
     QMqttSubscriptionProperties subProps;
@@ -405,7 +413,7 @@ void Tst_QMqttSubscription::qtbug_106203()
     const QString topic(QLatin1String("Qt/qtbug106203/Identity"));
 
     // Fill up sub-Topics with retained messages (ie connection state of devices)
-    QMqttClient retainer;
+    VersionClient(QMqttClient::MQTT_3_1_1, retainer);
     retainer.setHostname(m_testBroker);
     retainer.setPort(m_port);
     retainer.connectToHost();
@@ -422,7 +430,7 @@ void Tst_QMqttSubscription::qtbug_106203()
     retainer.disconnectFromHost();
     QTRY_VERIFY2(retainer.state() == QMqttClient::Disconnected, "Could not disconnect from broker.");
 
-    QMqttClient client;
+    VersionClient(QMqttClient::MQTT_3_1_1, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
 
@@ -453,7 +461,7 @@ void Tst_QMqttSubscription::qtbug_106203()
 
 void Tst_QMqttSubscription::qtbug_104478()
 {
-    QMqttClient client;
+    VersionClient(QMqttClient::MQTT_3_1_1, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
 

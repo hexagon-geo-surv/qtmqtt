@@ -112,17 +112,14 @@ void tst_QMqttPublishProperties::getSet()
 
 void tst_QMqttPublishProperties::propertyConsistency()
 {
-
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
 
     client.connectToHost();
     QTRY_VERIFY2(client.state() == QMqttClient::Connected, "Could not connect to broker.");
 
-    QMqttClient client2;
-    client2.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client2);
     client2.setHostname(m_testBroker);
     client2.setPort(m_port);
 

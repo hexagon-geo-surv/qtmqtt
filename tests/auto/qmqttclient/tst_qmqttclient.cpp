@@ -336,10 +336,12 @@ void Tst_QMqttClient::compliantTopic_data()
 void Tst_QMqttClient::compliantTopic()
 {
     QFETCH(QString, topic);
+    QFETCH(QMqttClient::ProtocolVersion, mqttVersion);
+
     QString truncTopic = topic;
     truncTopic.truncate(std::numeric_limits<std::uint16_t>::max());
 
-    QMqttClient publisher;
+    VersionClient(mqttVersion, publisher);
     publisher.setClientId(QLatin1String("publisher"));
     publisher.setHostname(m_testBroker);
     publisher.setPort(m_port);
@@ -347,7 +349,7 @@ void Tst_QMqttClient::compliantTopic()
     publisher.connectToHost();
     QTRY_COMPARE(publisher.state(), QMqttClient::Connected);
 
-    QMqttClient subscriber;
+    VersionClient(mqttVersion, subscriber);
     subscriber.setClientId(QLatin1String("subscriber"));
     subscriber.setHostname(m_testBroker);
     subscriber.setPort(m_port);
@@ -601,8 +603,7 @@ void Tst_QMqttClient::staticProperties_QTBUG_67176()
 
 void Tst_QMqttClient::authentication()
 {
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
 
@@ -645,8 +646,7 @@ void Tst_QMqttClient::messageStatus()
     QFETCH(int, qos);
     QFETCH(QList<QMqtt::MessageStatus>, expectedStatus);
 
-    QMqttClient client;
-    client.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, client);
     client.setHostname(m_testBroker);
     client.setPort(m_port);
 
@@ -684,16 +684,14 @@ void Tst_QMqttClient::messageStatusReceive()
     QFETCH(int, qos);
     QFETCH(QList<QMqtt::MessageStatus>, expectedStatus);
 
-    QMqttClient publisher;
-    publisher.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, publisher);
     publisher.setHostname(m_testBroker);
     publisher.setPort(m_port);
 
     publisher.connectToHost();
     QTRY_VERIFY2(publisher.state() == QMqttClient::Connected, "Could not connect to broker.");
 
-    QMqttClient subscriber;
-    subscriber.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, subscriber);
     subscriber.setHostname(m_testBroker);
     subscriber.setPort(m_port);
 
@@ -737,8 +735,7 @@ void Tst_QMqttClient::subscriptionIdsOverlap()
 
     const QString topic = QLatin1String("Qt/client/idcheck");
     // Connect publisher
-    QMqttClient pub;
-    pub.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, pub);
     pub.setHostname(m_testBroker);
     pub.setPort(m_port);
 
@@ -746,8 +743,7 @@ void Tst_QMqttClient::subscriptionIdsOverlap()
     QTRY_VERIFY2(pub.state() == QMqttClient::Connected, "Could not connect publisher.");
 
     // Connect subA
-    QMqttClient subClientA;
-    subClientA.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, subClientA);
     subClientA.setHostname(m_testBroker);
     subClientA.setPort(m_port);
 
@@ -769,8 +765,7 @@ void Tst_QMqttClient::subscriptionIdsOverlap()
     });
 
     // Connect subB
-    QMqttClient subClientB;
-    subClientB.setProtocolVersion(QMqttClient::MQTT_5_0);
+    VersionClient(QMqttClient::MQTT_5_0, subClientB);
     subClientB.setHostname(m_testBroker);
     subClientB.setPort(m_port);
 
